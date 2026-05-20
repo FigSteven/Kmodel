@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FFFOrmulations K-Factor Calculator — Formula Fig</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #faf7f3;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #e6e0d8;
+    --accent: #c8a27a;
+    --accent-dark: #8a6843;
+    --good: #2f7a4a;
+    --warn: #b8741a;
+    --bad: #b53b2a;
+    --chip-bg: #f3ede4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding: 32px 24px 64px;
+    line-height: 1.45;
+  }
+  .container { max-width: 1180px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 32px;
+    margin: 4px 0 6px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--muted); font-size: 15px; max-width: 760px; }
+  .formula-bar {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 20px 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 15px;
+  }
+  .formula-bar code {
+    background: var(--chip-bg);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .input-row:last-child { border-bottom: none; }
+  .input-row label { font-size: 14px; }
+  .input-row label .hint { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
+  .input-row input {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: right;
+    font-family: "SF Mono", Menlo, monospace;
+    background: #fbfaf8;
+  }
+  .input-row input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .channel-block {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px 6px;
+    margin-bottom: 12px;
+    background: #fcfaf6;
+  }
+  .channel-block h3 {
+    font-size: 13px;
+    margin: 0 0 6px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .channel-block h3 .k-tag {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent-dark);
+    background: var(--chip-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .channel-desc { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+  }
+  .kpi .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .kpi .value {
+    font-size: 30px;
+    font-weight: 600;
+    margin-top: 6px;
+    letter-spacing: -0.02em;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .kpi .delta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+  .status-viral { background: #e3f1e8; color: var(--good); }
+  .status-amp { background: #fbeedd; color: var(--warn); }
+  .status-low { background: #fae3df; color: var(--bad); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  th {
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  tr:last-child td { border-bottom: none; }
+  .chart-wrap { position: relative; height: 320px; margin-top: 8px; }
+  .notes {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #2a2a2a;
+  }
+  .notes h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-dark); margin: 0 0 12px; }
+  .notes p { margin: 0 0 10px; }
+  .notes ul { margin: 0 0 12px 18px; padding: 0; }
+  .notes li { margin: 4px 0; }
+  .benchmark-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .bench-chip {
+    background: var(--chip-bg);
+    padding: 5px 10px;
+    border-radius: 999px;
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  footer { margin-top: 28px; font-size: 12px; color: var(--muted); text-align: center; }
+  .journey-card { margin-bottom: 24px; }
+  .journey-wrap {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 900px) { .journey-wrap { grid-template-columns: 1fr; } }
+  .journey-svg { width: 100%; max-width: 520px; height: auto; display: block; margin: 0 auto; background-image: radial-gradient(circle, #d4d0ca 1px, transparent 1px); background-size: 14px 14px; border-radius: 12px; padding: 8px; }
+  .journey-copy { font-size: 14px; color: #2a2a2a; }
+  .journey-copy p { margin: 0; }
+  .product-mix-card { margin-bottom: 24px; }
+  .product-mix-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .product-mix-header h2 { margin: 0; }
+  .currency-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .currency-toggle button { background: #fff; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; letter-spacing: 0.06em; }
+  .currency-toggle button.active { background: var(--accent); color: #fff; }
+  .product-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .product-table th, .product-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+  .product-table th:first-child, .product-table td:first-child { text-align: left; font-weight: 500; }
+  .product-table th { font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.08em; }
+  .product-table input { width: 100%; padding: 5px 6px; border: 1px solid var(--line); border-radius: 5px; font-size: 13px; text-align: right; font-family: "SF Mono", Menlo, monospace; background: #fbfaf8; }
+  .product-table tfoot td { font-weight: 600; background: #fcfaf6; border-top: 2px solid var(--line); border-bottom: none; }
+  .product-table .col-currency { width: 110px; }
+  .product-table .col-units { width: 110px; }
+  .product-table .col-curr { width: 78px; }
+  .product-table .col-gift { width: 64px; }
+  .product-table .group-head { text-align: center; border-bottom: 1px solid var(--line); font-size: 10px; padding-bottom: 4px; }
+  .product-table .group-gift { background: #f9f3ea; color: var(--accent-dark); }
+  .product-table th[colspan] { border-bottom: 1px solid var(--line); }
+  .product-table .dim { color: var(--muted); }
+  .product-table .dim input { color: var(--muted); }
+  .gift-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  @media (max-width: 700px) { .gift-summary { grid-template-columns: 1fr; } }
+  .gift-tile { background: #fcfaf6; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .gift-tile .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .gift-tile .value { font-size: 20px; font-weight: 600; margin-top: 4px; font-family: "SF Mono", Menlo, monospace; color: var(--accent-dark); }
+  .gift-tile .delta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent-dark);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .reset-btn:hover { background: var(--chip-bg); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="eyebrow">Formula Fig · Growth Modeling</div>
+    <h1>FFFOrmulations K-Factor</h1>
+    <p class="sub">A live model of how every Formula Fig customer compounds into the next. Edit any blue input on the left — outputs, projection, and CAC offset recompute instantly. Defaults are illustrative DTC skincare benchmarks; overwrite with your own numbers.</p>
+  </header>
+
+  <div class="formula-bar">
+    <span><strong>The Formula:</strong></span>
+    <code>K = i × c</code>
+    <span style="color:var(--muted);font-size:13px;">where <strong>i</strong> = invitations sent per customer · <strong>c</strong> = conversion rate of those invitations</span>
+    <button class="reset-btn" onclick="resetDefaults()">Reset to defaults</button>
+  </div>
+
+  <!-- JOURNEY LOOP -->
+  <div class="card journey-card">
+    <h2>Where K-Factor Lives in the Loop</h2>
+    <div class="journey-wrap">
+      <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" class="journey-svg" aria-label="Customer journey loop showing CAQ and LTV halves">
+        <defs>
+          <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" stroke="#5a5a5a" stroke-width="1.2" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- 6 outer arc segments, each ending at a stage node with an arrowhead.
+             Node coords computed from center (300,300) radius 220:
+               Evaluate    θ=315°  (144,144)
+               Cust.Acq    θ=30°   (410,110)
+               Purchase    θ=85°   (519,281)
+               Experience  θ=135°  (456,456)
+               Advocate    θ=225°  (144,456)
+               Consider    θ=275°  (81,281)
+             All arcs sweep clockwise (sweep-flag=1). -->
+        <path d="M 81 281 A 220 220 0 0 1 144 144"   fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 144 144 A 220 220 0 0 1 410 110"  fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 410 110 A 220 220 0 0 1 519 281"  fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 519 281 A 220 220 0 0 1 456 456"  fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 456 456 A 220 220 0 0 1 144 456"  fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 144 456 A 220 220 0 0 1 81 281"   fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+
+        <!-- Inner S-curve: Advocate (144,456) → Bond (290,320) → up to Customer Acq (410,110).
+             Two cubic beziers; arrow lands at Bond, second segment is unarrowed continuation. -->
+        <path d="M 144 456 C 195 395 245 360 290 320" fill="none" stroke="#5a5a5a" stroke-width="2.4" marker-end="url(#arrowHead)"/>
+        <path d="M 290 320 C 345 270 395 195 410 110" fill="none" stroke="#5a5a5a" stroke-width="2.4"/>
+
+        <!-- Stage labels (positioned outside the ring) -->
+        <text x="430" y="100"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Customer Acquisition</text>
+        <text x="535" y="285"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Purchase</text>
+        <text x="480" y="484"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Experience</text>
+        <text x="98"  y="492"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Advocate</text>
+        <text x="18"  y="285"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Consider</text>
+        <text x="88"  y="130"  font-family="-apple-system, sans-serif" font-size="17" fill="#1a1a1a">Evaluate</text>
+        <text x="305" y="325"  font-family="-apple-system, sans-serif" font-size="15" fill="#1a1a1a">Bond</text>
+
+        <!-- Half labels -->
+        <text x="300" y="225" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="34" font-weight="600" fill="#1a1a1a" letter-spacing="2">CAQ</text>
+        <text x="300" y="408" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="34" font-weight="600" fill="#1a1a1a" letter-spacing="2">LTV</text>
+
+        <!-- K-factor highlight: the Advocate → Customer Acquisition arc -->
+        <path d="M 144 456 A 220 220 0 0 1 410 110" fill="none" stroke="#c8a27a" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+        <text x="20" y="80" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#8a6843" letter-spacing="0.12em">K-FACTOR LIVES ALONG THIS ARC</text>
+      </svg>
+      <div class="journey-copy">
+        <p><strong>K-factor is the bridge across the loop.</strong> Every customer who advocates (left side) and triggers a new acquisition (top right) is one unit of K. Strengthening that arc — better refer-a-friend mechanics, more shareable unboxing, deeper post-purchase bond — directly raises K and tightens the cycle time between Advocate and Acquisition.</p>
+        <p style="margin-top:10px;"><strong>The two halves:</strong></p>
+        <ul style="margin:6px 0 0 18px; padding:0;">
+          <li><strong>CAQ</strong> (top) — Evaluate · Consider · Customer Acquisition · Purchase. Paid media plus referrals do the work here.</li>
+          <li><strong>LTV</strong> (bottom) — Experience · Bond · Advocate. Product, NPS, and community decide how high <em>c</em> can get.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT MIX -->
+  <div class="card product-mix-card">
+    <div class="product-mix-header">
+      <h2>Product Mix → Weighted AOV</h2>
+      <div class="currency-toggle" id="curr-toggle">
+        <button class="active" data-curr="USD">USD</button>
+        <button data-curr="CAD">CAD</button>
+      </div>
+    </div>
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th rowspan="2">Product</th>
+          <th colspan="2" class="group-head">Unit Price</th>
+          <th colspan="3" class="group-head group-gift">Gifting (free seeding)</th>
+          <th rowspan="2">ATS @ Launch</th>
+          <th rowspan="2">Total Units</th>
+          <th rowspan="2">Revenue</th>
+          <th rowspan="2">Mix %</th>
+        </tr>
+        <tr>
+          <th class="col-curr">USD</th>
+          <th class="col-curr">CAD</th>
+          <th class="col-gift">P1</th>
+          <th class="col-gift">P2</th>
+          <th class="col-gift">P3</th>
+        </tr>
+      </thead>
+      <tbody id="product-tbody">
+        <tr data-sku="cleanser">
+          <td>Cleanser</td>
+          <td><input type="number" data-field="usd" value="33" min="0" step="1"></td>
+          <td><input type="number" data-field="cad" value="46" min="0" step="1"></td>
+          <td><input type="number" data-field="p1" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p2" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p3" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="ats" value="9700" min="0" step="100"></td>
+          <td data-field="tot">—</td>
+          <td data-field="rev">—</td>
+          <td data-field="mix">—</td>
+        </tr>
+        <tr data-sku="essence">
+          <td>Essence</td>
+          <td><input type="number" data-field="usd" value="45" min="0" step="1"></td>
+          <td><input type="number" data-field="cad" value="63" min="0" step="1"></td>
+          <td><input type="number" data-field="p1" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p2" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p3" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="ats" value="9700" min="0" step="100"></td>
+          <td data-field="tot">—</td>
+          <td data-field="rev">—</td>
+          <td data-field="mix">—</td>
+        </tr>
+        <tr data-sku="serum">
+          <td>Serum</td>
+          <td><input type="number" data-field="usd" value="60" min="0" step="1"></td>
+          <td><input type="number" data-field="cad" value="84" min="0" step="1"></td>
+          <td><input type="number" data-field="p1" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p2" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p3" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="ats" value="4700" min="0" step="100"></td>
+          <td data-field="tot">—</td>
+          <td data-field="rev">—</td>
+          <td data-field="mix">—</td>
+        </tr>
+        <tr data-sku="cream">
+          <td>Cream</td>
+          <td><input type="number" data-field="usd" value="65" min="0" step="1"></td>
+          <td><input type="number" data-field="cad" value="91" min="0" step="1"></td>
+          <td><input type="number" data-field="p1" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p2" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="p3" value="100" min="0" step="10"></td>
+          <td><input type="number" data-field="ats" value="9700" min="0" step="100"></td>
+          <td data-field="tot">—</td>
+          <td data-field="rev">—</td>
+          <td data-field="mix">—</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>Total / Weighted AOV</td>
+          <td id="aov-usd">—</td>
+          <td id="aov-cad">—</td>
+          <td id="tot-p1">—</td>
+          <td id="tot-p2">—</td>
+          <td id="tot-p3">—</td>
+          <td id="tot-ats">—</td>
+          <td id="tot-units">—</td>
+          <td id="tot-rev">—</td>
+          <td>100%</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="gift-summary">
+      <div class="gift-tile">
+        <div class="label">Total Gifting Units</div>
+        <div class="value" id="gift-units">—</div>
+        <div class="delta">free seeding (P1 + P2 + P3)</div>
+      </div>
+      <div class="gift-tile">
+        <div class="label">Gifting at Retail Value</div>
+        <div class="value" id="gift-retail">—</div>
+        <div class="delta">forgone revenue if sold</div>
+      </div>
+      <div class="gift-tile">
+        <div class="label">ATS Units (Sellable)</div>
+        <div class="value" id="ats-units">—</div>
+        <div class="delta">drives revenue at AOV</div>
+      </div>
+    </div>
+
+    <p style="font-size:12px;color:var(--muted);margin:14px 0 0;">Weighted AOV is computed from <strong>ATS units × price only</strong> (gifting earns no revenue but seeds the UGC channel). Toggle currency to flip the whole model between USD and CAD.</p>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="label">Blended K-Factor</div>
+      <div class="value" id="kpi-blended-k">—</div>
+      <div id="kpi-status" class="status-pill status-amp">—</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Cycle Time</div>
+      <div class="value" id="kpi-cycle">—</div>
+      <div class="delta" id="kpi-doubling">—</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Referral CAC</div>
+      <div class="value" id="kpi-rcac">—</div>
+      <div class="delta" id="kpi-rcac-delta">—</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Referral Revenue / Cycle</div>
+      <div class="value" id="kpi-ref-rev">—</div>
+      <div class="delta" id="kpi-ref-rev-delta">at current AOV × K × base</div>
+    </div>
+  </div>
+
+  <!-- INPUTS + CHANNEL BREAKDOWN -->
+  <div class="grid">
+    <div class="card">
+      <h2>Inputs · Edit Anything</h2>
+
+      <div class="input-row">
+        <label>Starting customer base<span class="hint">existing active customers</span></label>
+        <input type="number" id="in-base" value="10000" min="0" step="100" />
+      </div>
+      <div class="input-row">
+        <label>Cycle time (days)<span class="hint">purchase → referred purchase</span></label>
+        <input type="number" id="in-cycle" value="45" min="1" step="1" />
+      </div>
+      <div class="input-row">
+        <label>AOV <span id="aov-curr">(USD)</span><span class="hint">auto-computed from product mix · override allowed</span></label>
+        <input type="number" id="in-aov" value="49" min="0" step="1" />
+      </div>
+      <div class="input-row">
+        <label>Refer-a-friend reward <span id="reward-curr">(USD)</span><span class="hint">cost per successful referral (give + get)</span></label>
+        <input type="number" id="in-reward" value="40" min="0" step="1" />
+      </div>
+      <div class="input-row">
+        <label>Paid CAC baseline <span id="paidcac-curr">(USD)</span><span class="hint">current blended paid cost-per-acquisition</span></label>
+        <input type="number" id="in-paidcac" value="65" min="0" step="1" />
+      </div>
+
+      <h2 style="margin-top:22px;">Channel: Refer-a-Friend</h2>
+      <div class="channel-block">
+        <h3>"Give $20, get $20" program <span class="k-tag" id="k-raf">K = —</span></h3>
+        <p class="channel-desc">Unique discount code shared post-purchase.</p>
+        <div class="input-row">
+          <label>Invitations per customer (i)</label>
+          <input type="number" id="raf-i" value="1.2" min="0" step="0.1" />
+        </div>
+        <div class="input-row">
+          <label>Conversion rate (c)</label>
+          <input type="number" id="raf-c" value="0.18" min="0" max="1" step="0.01" />
+        </div>
+      </div>
+
+      <h2 style="margin-top:18px;">Channel: Social Unboxing / UGC</h2>
+      <div class="channel-block">
+        <h3>Posts &amp; tags <span class="k-tag" id="k-ugc">K = —</span></h3>
+        <p class="channel-desc">Organic IG/TikTok unboxing &amp; result posts.</p>
+        <div class="input-row">
+          <label>Invitations per customer (i)</label>
+          <input type="number" id="ugc-i" value="0.8" min="0" step="0.1" />
+        </div>
+        <div class="input-row">
+          <label>Conversion rate (c)</label>
+          <input type="number" id="ugc-c" value="0.04" min="0" max="1" step="0.01" />
+        </div>
+      </div>
+
+      <h2 style="margin-top:18px;">Channel: Organic Word-of-Mouth</h2>
+      <div class="channel-block">
+        <h3>Unincentivized recommendation <span class="k-tag" id="k-wom">K = —</span></h3>
+        <p class="channel-desc">Friend-to-friend conversation, no code.</p>
+        <div class="input-row">
+          <label>Invitations per customer (i)</label>
+          <input type="number" id="wom-i" value="2.5" min="0" step="0.1" />
+        </div>
+        <div class="input-row">
+          <label>Conversion rate (c)</label>
+          <input type="number" id="wom-c" value="0.06" min="0" max="1" step="0.01" />
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px;">
+        <h2>Channel Breakdown</h2>
+        <table id="channel-table">
+          <thead>
+            <tr>
+              <th>Channel</th>
+              <th>i</th>
+              <th>c</th>
+              <th>K</th>
+              <th>% of K</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr style="font-weight:600;">
+              <td>Blended</td>
+              <td id="tot-i">—</td>
+              <td id="tot-c">—</td>
+              <td id="tot-k">—</td>
+              <td>100%</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="benchmark-bar">
+          <span class="bench-chip">DTC typical: 0.2 – 0.5</span>
+          <span class="bench-chip">Viral threshold: 1.0</span>
+          <span class="bench-chip">Top quartile: 0.5+</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Compounding Projection · 12 Cycles</h2>
+        <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+        <table style="margin-top:14px;">
+          <thead>
+            <tr><th>Cycle</th><th>Days</th><th>New from referrals</th><th>Cumulative customers</th></tr>
+          </thead>
+          <tbody id="proj-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h2>How To Read This Model</h2>
+    <p><strong>K-factor</strong> measures the new customers each existing customer generates via referrals/word-of-mouth. K above 1.0 produces self-sustaining exponential growth; below 1.0 still meaningfully offsets paid CAC.</p>
+    <ul>
+      <li><strong>Refer-a-Friend</strong> typically delivers the highest K because the incentive directly drives both invitation volume and conversion.</li>
+      <li><strong>Social Unboxing / UGC</strong> has lower conversion per impression but enormous reach — small c on a large effective i still moves the blended K.</li>
+      <li><strong>Organic Word-of-Mouth</strong> is the cheapest channel ($0 incentive cost) but is gated by product love — improve NPS and the c climbs.</li>
+      <li><strong>Cycle time</strong> matters as much as K. A K of 0.4 with a 30-day cycle outperforms a K of 0.6 with a 90-day cycle over a year.</li>
+    </ul>
+    <p style="margin-top:12px;"><strong>Effective Referral CAC</strong> = (refer-a-friend reward × successful referrals) ÷ new customers from all referral channels. Compare this to paid CAC to size the offset.</p>
+    <p style="color:var(--muted);font-size:12px;margin-top:18px;">Default values are illustrative DTC skincare benchmarks drawn from First Round Review, OpenView Partners, and StatsForStartups. Replace with Formula Fig's actual referral program data for a tuned model.</p>
+  </div>
+
+  <footer>FFFOrmulations K-Factor · interactive model · built for Formula Fig</footer>
+</div>
+
+<script>
+const DEFAULTS = {
+  'in-base': 10000, 'in-cycle': 45, 'in-aov': 49, 'in-reward': 40, 'in-paidcac': 65,
+  'raf-i': 1.2, 'raf-c': 0.18,
+  'ugc-i': 0.8, 'ugc-c': 0.04,
+  'wom-i': 2.5, 'wom-c': 0.06
+};
+
+const PRODUCT_DEFAULTS = {
+  cleanser: { usd: 33, cad: 46, p1: 100, p2: 100, p3: 100, ats: 9700 },
+  essence:  { usd: 45, cad: 63, p1: 100, p2: 100, p3: 100, ats: 9700 },
+  serum:    { usd: 60, cad: 84, p1: 100, p2: 100, p3: 100, ats: 4700 },
+  cream:    { usd: 65, cad: 91, p1: 100, p2: 100, p3: 100, ats: 9700 }
+};
+
+const CHANNELS = [
+  { id: 'raf', name: 'Refer-a-Friend', incentivized: true },
+  { id: 'ugc', name: 'Social Unboxing / UGC', incentivized: false },
+  { id: 'wom', name: 'Organic Word-of-Mouth', incentivized: false }
+];
+
+let chart = null;
+let currency = 'USD';   // active currency for AOV pickup & display
+let aovUserOverride = false;  // becomes true if user manually edits AOV
+
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseFloat($(id).value) || 0; }
+function fmt(n, d=2) { return Number.isFinite(n) ? n.toFixed(d) : '—'; }
+function fmtInt(n) { return Number.isFinite(n) ? Math.round(n).toLocaleString() : '—'; }
+function fmtMoney(n) { return Number.isFinite(n) ? '$' + Math.round(n).toLocaleString() : '—'; }
+function fmtMoneyCents(n) { return Number.isFinite(n) ? '$' + n.toFixed(2) : '—'; }
+function fmtPct(n) { return Number.isFinite(n) ? (n * 100).toFixed(1) + '%' : '—'; }
+
+function computeProductMix() {
+  const rows = document.querySelectorAll('#product-tbody tr');
+  let totalUnits = 0, totalATS = 0;
+  let totalP1 = 0, totalP2 = 0, totalP3 = 0;
+  let totalRevUSD = 0, totalRevCAD = 0;
+  let giftRetailUSD = 0, giftRetailCAD = 0;
+  const rowData = [];
+  rows.forEach(row => {
+    const usd = parseFloat(row.querySelector('[data-field="usd"]').value) || 0;
+    const cad = parseFloat(row.querySelector('[data-field="cad"]').value) || 0;
+    const p1 = parseFloat(row.querySelector('[data-field="p1"]').value) || 0;
+    const p2 = parseFloat(row.querySelector('[data-field="p2"]').value) || 0;
+    const p3 = parseFloat(row.querySelector('[data-field="p3"]').value) || 0;
+    const ats = parseFloat(row.querySelector('[data-field="ats"]').value) || 0;
+    const gift = p1 + p2 + p3;
+    const tot = gift + ats;
+    const revUSD = usd * ats;
+    const revCAD = cad * ats;
+    totalUnits += tot;
+    totalATS += ats;
+    totalP1 += p1; totalP2 += p2; totalP3 += p3;
+    totalRevUSD += revUSD;
+    totalRevCAD += revCAD;
+    giftRetailUSD += usd * gift;
+    giftRetailCAD += cad * gift;
+    rowData.push({ row, tot, revUSD, revCAD });
+  });
+  // fill per-row totals + revenue + mix
+  rowData.forEach(({ row, tot, revUSD, revCAD }) => {
+    const rev = currency === 'USD' ? revUSD : revCAD;
+    const totRev = currency === 'USD' ? totalRevUSD : totalRevCAD;
+    row.querySelector('[data-field="tot"]').textContent = fmtInt(tot);
+    row.querySelector('[data-field="rev"]').textContent = fmtMoney(rev);
+    row.querySelector('[data-field="mix"]').textContent = totRev > 0 ? (rev / totRev * 100).toFixed(0) + '%' : '—';
+  });
+  // AOV is computed on ATS units only (gifting yields no revenue)
+  const aovUSD = totalATS > 0 ? totalRevUSD / totalATS : 0;
+  const aovCAD = totalATS > 0 ? totalRevCAD / totalATS : 0;
+  $('aov-usd').textContent = fmtMoneyCents(aovUSD);
+  $('aov-cad').textContent = fmtMoneyCents(aovCAD);
+  $('tot-p1').textContent = fmtInt(totalP1);
+  $('tot-p2').textContent = fmtInt(totalP2);
+  $('tot-p3').textContent = fmtInt(totalP3);
+  $('tot-ats').textContent = fmtInt(totalATS);
+  $('tot-units').textContent = fmtInt(totalUnits);
+  $('tot-rev').textContent = fmtMoney(currency === 'USD' ? totalRevUSD : totalRevCAD);
+  // gifting summary tiles
+  const giftUnits = totalP1 + totalP2 + totalP3;
+  const giftRetail = currency === 'USD' ? giftRetailUSD : giftRetailCAD;
+  $('gift-units').textContent = fmtInt(giftUnits);
+  $('gift-retail').textContent = fmtMoney(giftRetail);
+  $('ats-units').textContent = fmtInt(totalATS);
+  return { aovUSD, aovCAD, totalUnits, totalATS, totalRevUSD, totalRevCAD, giftUnits, giftRetailUSD, giftRetailCAD };
+}
+
+function applyCurrencyLabels() {
+  const cur = '(' + currency + ')';
+  $('aov-curr').textContent = cur;
+  $('reward-curr').textContent = cur;
+  $('paidcac-curr').textContent = cur;
+}
+
+function syncAOVFromMix(mix) {
+  if (aovUserOverride) return;
+  const v = currency === 'USD' ? mix.aovUSD : mix.aovCAD;
+  $('in-aov').value = v.toFixed(2);
+}
+
+function compute() {
+  const mix = computeProductMix();
+  syncAOVFromMix(mix);
+  applyCurrencyLabels();
+
+  const base = val('in-base');
+  const cycle = val('in-cycle');
+  const aov = val('in-aov');
+  const reward = val('in-reward');
+  const paidCAC = val('in-paidcac');
+
+  // per-channel K
+  const data = CHANNELS.map(c => {
+    const i = val(c.id + '-i');
+    const conv = val(c.id + '-c');
+    return { ...c, i, c: conv, k: i * conv };
+  });
+  const totalK = data.reduce((s, d) => s + d.k, 0);
+  const totalI = data.reduce((s, d) => s + d.i, 0);
+  const blendedC = totalI > 0 ? totalK / totalI : 0;
+
+  // KPI: blended K
+  $('kpi-blended-k').textContent = fmt(totalK, 2);
+  const status = $('kpi-status');
+  if (totalK >= 1.0) {
+    status.textContent = 'Viral · self-sustaining';
+    status.className = 'status-pill status-viral';
+  } else if (totalK >= 0.3) {
+    status.textContent = 'Strong amplifier';
+    status.className = 'status-pill status-amp';
+  } else {
+    status.textContent = 'Below DTC benchmark';
+    status.className = 'status-pill status-low';
+  }
+
+  // Cycle / doubling
+  $('kpi-cycle').textContent = fmtInt(cycle) + 'd';
+  if (totalK > 1) {
+    const doubling = (cycle * Math.log(2)) / Math.log(1 + totalK);
+    $('kpi-doubling').textContent = 'Doubles every ~' + Math.round(doubling) + ' days';
+  } else if (totalK > 0) {
+    // amplification factor: 1/(1-K)
+    const amp = 1 / (1 - totalK);
+    $('kpi-doubling').textContent = 'Amplifies paid by ' + amp.toFixed(2) + 'x';
+  } else {
+    $('kpi-doubling').textContent = '—';
+  }
+
+  // Channel rows
+  const tbody = document.querySelector('#channel-table tbody');
+  tbody.innerHTML = '';
+  data.forEach(d => {
+    const pct = totalK > 0 ? (d.k / totalK * 100) : 0;
+    tbody.insertAdjacentHTML('beforeend',
+      `<tr><td>${d.name}</td><td>${fmt(d.i,2)}</td><td>${fmtPct(d.c)}</td><td>${fmt(d.k,3)}</td><td>${pct.toFixed(0)}%</td></tr>`);
+    $('k-' + d.id).textContent = 'K = ' + fmt(d.k, 3);
+  });
+  $('tot-i').textContent = fmt(totalI, 2);
+  $('tot-c').textContent = fmtPct(blendedC);
+  $('tot-k').textContent = fmt(totalK, 3);
+
+  // Referral CAC: only the incentivized channel costs money
+  const rafData = data.find(d => d.id === 'raf');
+  const referralNewPerCust = totalK; // new customers per existing customer per cycle (all channels)
+  const rafNewPerCust = rafData.k;
+  const referralCAC = referralNewPerCust > 0 ? (reward * rafNewPerCust) / referralNewPerCust : 0;
+  $('kpi-rcac').textContent = fmtMoneyCents(referralCAC);
+  const savings = paidCAC - referralCAC;
+  $('kpi-rcac-delta').textContent = savings > 0 ? `Saves ${fmtMoneyCents(savings)} vs. paid` : 'Higher than paid CAC';
+
+  // Referral revenue per cycle: new referred customers × AOV
+  const referralCustPerCycle = base * totalK;
+  const referralRev = referralCustPerCycle * aov;
+  $('kpi-ref-rev').textContent = fmtMoney(referralRev);
+  $('kpi-ref-rev-delta').textContent = `${fmtInt(referralCustPerCycle)} new customers × ${fmtMoneyCents(aov)} AOV`;
+
+  // Projection: standard viral-loop model — each NEW cohort refers once,
+  // generating K * cohort new customers in the next cycle.
+  const cycles = 12;
+  let lastCohort = base;     // most recent cohort that will refer next cycle
+  let cum = base;
+  const labels = [];
+  const cumArr = [];
+  const newArr = [];
+  const projTbody = $('proj-table');
+  projTbody.innerHTML = '';
+  for (let n = 1; n <= cycles; n++) {
+    const newCust = lastCohort * totalK;
+    cum = cum + newCust;
+    lastCohort = newCust;
+    labels.push('C' + n);
+    cumArr.push(cum);
+    newArr.push(newCust);
+    if (n <= 6 || n === cycles) {
+      projTbody.insertAdjacentHTML('beforeend',
+        `<tr><td>Cycle ${n}</td><td>${cycle * n}</td><td>${fmtInt(newCust)}</td><td>${fmtInt(cum)}</td></tr>`);
+    }
+  }
+
+  // Chart
+  const ctx = $('growthChart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['C0', ...labels],
+      datasets: [{
+        label: 'Cumulative customers',
+        data: [base, ...cumArr],
+        borderColor: '#8a6843',
+        backgroundColor: 'rgba(200,162,122,0.18)',
+        tension: 0.25,
+        fill: true,
+        pointRadius: 3,
+        pointBackgroundColor: '#8a6843'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: v => v.toLocaleString() } },
+        x: { title: { display: true, text: 'Referral cycle', color: '#6b6b6b' } }
+      }
+    }
+  });
+}
+
+function resetDefaults() {
+  Object.entries(DEFAULTS).forEach(([id, v]) => { $(id).value = v; });
+  Object.entries(PRODUCT_DEFAULTS).forEach(([sku, vals]) => {
+    const row = document.querySelector(`#product-tbody tr[data-sku="${sku}"]`);
+    if (!row) return;
+    ['usd','cad','p1','p2','p3','ats'].forEach(f => {
+      const el = row.querySelector(`[data-field="${f}"]`);
+      if (el) el.value = vals[f];
+    });
+  });
+  aovUserOverride = false;
+  compute();
+}
+
+// Wire numeric input changes -> recompute
+document.querySelectorAll('input[type=number]').forEach(el => {
+  el.addEventListener('input', compute);
+});
+
+// Detect manual AOV override so product mix doesn't keep overwriting it
+$('in-aov').addEventListener('input', () => { aovUserOverride = true; });
+
+// Currency toggle
+document.querySelectorAll('#curr-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#curr-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currency = btn.dataset.curr;
+    aovUserOverride = false; // toggle resets override so AOV follows the new currency
+    compute();
+  });
+});
+
+compute();
+</script>
+</body>
+</html>
